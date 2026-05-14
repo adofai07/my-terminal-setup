@@ -445,7 +445,7 @@ sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NV
 
 # 5. Miscellaneous System Tools (ble.sh, Starship)
 echo "    Installing ble.sh and Starship prompt ..."
-sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoya/ble.sh.git /tmp/ble.sh && make -C /tmp/ble.sh install PREFIX=~/.local && rm -rf /tmp/ble.sh"
+sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh && make -C /tmp/ble.sh install PREFIX=~/.local && rm -rf /tmp/ble.sh"
 curl -sS https://starship.rs/install.sh | sh -s -- -y
 echo "    Done."
 
