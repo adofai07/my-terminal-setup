@@ -218,22 +218,27 @@ echo "    Done."
 print_step "Disabling SSH password authentication"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 
-# Replace or append PasswordAuthentication
-if sudo grep -qE "^\s*#?\s*PasswordAuthentication" "${SSHD_CONFIG}"; then
-    sudo sed -i 's/^\s*#\?\s*PasswordAuthentication.*/PasswordAuthentication no/' "${SSHD_CONFIG}"
-else
-    echo "PasswordAuthentication no" | sudo tee -a "${SSHD_CONFIG}" > /dev/null
-fi
+if [[ -f "${SSHD_CONFIG}" ]]; then
+    # Replace or append PasswordAuthentication
+    if sudo grep -qE "^\s*#?\s*PasswordAuthentication" "${SSHD_CONFIG}"; then
+        sudo sed -i 's/^\s*#\?\s*PasswordAuthentication.*/PasswordAuthentication no/' "${SSHD_CONFIG}"
+    else
+        echo "PasswordAuthentication no" | sudo tee -a "${SSHD_CONFIG}" > /dev/null
+    fi
 
-# Replace or append KbdInteractiveAuthentication
-if sudo grep -qE "^\s*#?\s*KbdInteractiveAuthentication" "${SSHD_CONFIG}"; then
-    sudo sed -i 's/^\s*#\?\s*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' "${SSHD_CONFIG}"
-else
-    echo "KbdInteractiveAuthentication no" | sudo tee -a "${SSHD_CONFIG}" > /dev/null
-fi
+    # Replace or append KbdInteractiveAuthentication
+    if sudo grep -qE "^\s*#?\s*KbdInteractiveAuthentication" "${SSHD_CONFIG}"; then
+        sudo sed -i 's/^\s*#\?\s*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' "${SSHD_CONFIG}"
+    else
+        echo "KbdInteractiveAuthentication no" | sudo tee -a "${SSHD_CONFIG}" > /dev/null
+    fi
 
-echo "    Restarting SSH service ..."
-sudo service ssh stop && sudo service ssh start
+    echo "    Restarting SSH service ..."
+    sudo service ssh stop >/dev/null 2>&1 || true
+    sudo service ssh start >/dev/null 2>&1 || true
+else
+    echo "    SSHD config not found at ${SSHD_CONFIG}, skipping."
+fi
 echo "    Done."
 
 # ---------------------------------------------------------------------------
@@ -349,7 +354,6 @@ sudo apt-get install -y \
     libpam0g \
     libpcre2-8-0 \
     libpcre3 \
-    libprocps8 \
     libseccomp2 \
     libselinux1 \
     libsemanage-common \
@@ -519,3 +523,4 @@ echo "           Port <port-shown-at-Use-SSH-column>"
 echo ""
 echo "    2. Verify SSH key login works before closing this session."
 sing this session."
+"
