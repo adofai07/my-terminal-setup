@@ -517,8 +517,3 @@ echo "           IdentityFile <path-to-your-private-key>"
 echo "           Port <port-shown-at-Use-SSH-column>"
 echo ""
 echo "    2. Verify SSH key login works before closing this session."
-sing this session."
-"
-"
-
-"
