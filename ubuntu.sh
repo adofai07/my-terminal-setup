@@ -87,11 +87,22 @@ done
 read -p "    Chown homedir (0/1) [${CHOWN_HOMEDIR}]: " input_chown
 CHOWN_HOMEDIR="${input_chown:-$CHOWN_HOMEDIR}"
 
-default_ssh_keys="${SSH_KEYS[*]:-}"
-read -p "    SSH public keys (space-separated) [${default_ssh_keys}]: " input_ssh_keys
-if [[ -n "$input_ssh_keys" ]]; then
-    read -ra SSH_KEYS <<< "$input_ssh_keys"
+echo "    SSH public keys currently configured: ${#SSH_KEYS[@]}"
+echo "    Enter SSH public keys one by one. Leave blank and press Enter when done."
+if [[ ${#SSH_KEYS[@]} -gt 0 ]]; then
+    read -p "    Clear existing keys parsed from arguments? (y/N) [N]: " clear_keys
+    if [[ "$clear_keys" =~ ^[Yy]$ ]]; then
+        SSH_KEYS=()
+    fi
 fi
+
+while true; do
+    read -p "    Add SSH public key (or Enter to finish): " new_key
+    if [[ -z "$new_key" ]]; then
+        break
+    fi
+    SSH_KEYS+=("$new_key")
+done
 
 if [[ ${#SSH_KEYS[@]} -eq 0 ]]; then
     echo "    (no SSH keys provided — skipping key addition to authorized_keys)"
