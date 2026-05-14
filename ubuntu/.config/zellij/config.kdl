@@ -1,0 +1,4 @@
+on_force_close "detach"
+layout_dir "/home/eh.choi/.config/zellij/layouts"
+theme "gruvbox-dark"
+default_layout "default"

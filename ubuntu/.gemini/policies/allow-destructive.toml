@@ -1,0 +1,6 @@
+[[rule]]
+decision = "allow"
+priority = 950
+toolName = "run_shell_command"
+commandPrefix = [ "rm" ]
+modes = [ "default", "autoEdit", "yolo" ]

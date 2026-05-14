@@ -1,0 +1,30 @@
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+    tab name="Dashboard" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane name="cpu0"
+                pane name="cpu1"
+                pane name="cpu2"
+                pane name="cpu3"
+                pane name="cpu4"
+                pane name="cpu5"
+            }
+            pane split_direction="horizontal" {
+                pane name="gpu0"
+                pane name="gpu1"
+                pane name="gpu2"
+                pane name="gpu3"
+            }
+            pane name="main" focus=true
+        }
+    }
+}

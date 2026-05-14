@@ -1,0 +1,510 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Check for root/sudo privileges
+if [[ $EUID -ne 0 ]]; then
+   echo "ERROR: This script must be run as root. Please use sudo." 
+   exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# setup.bash — Post-launch notebook setup for KakaoCloud NIPA GPU notebooks
+# ---------------------------------------------------------------------------
+
+usage() {
+    cat <<EOF
+Usage: $0 --user-name <name> [--ssh-public-key "<key1>" ["<key2>" ...]] [--chown-homedir]
+
+Required:
+  --user-name       The Linux user name for this notebook (e.g. kyungminkim)
+
+Optional:
+  --ssh-public-key  One or more SSH public keys to add to authorized_keys
+                    (space-separated, each key quoted). If omitted, SSH is
+                    still configured but no keys are added.
+  --chown-homedir   Recursively fix ownership of the entire home directory
+                    in step 4. Off by default because scanning large home
+                    directories (conda envs, datasets) is slow; the script
+                    always chowns the paths it creates itself. Use this the
+                    first time you set up, or when ownership is suspect.
+  -h, --help        Show this help message
+EOF
+    exit 1
+}
+
+# ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+USER_NAME=""
+SSH_KEYS=()
+CHOWN_HOMEDIR=0
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --user-name)
+            [[ -z "${2:-}" ]] && { echo "ERROR: --user-name requires a value"; usage; }
+            USER_NAME="$2"
+            shift 2
+            ;;
+        --ssh-public-key)
+            shift
+            if [[ $# -eq 0 || "$1" == --* ]]; then
+                echo "ERROR: --ssh-public-key requires at least one key value"
+                usage
+            fi
+            while [[ $# -gt 0 && "$1" != --* ]]; do
+                SSH_KEYS+=("$1")
+                shift
+            done
+            ;;
+        --chown-homedir)
+            CHOWN_HOMEDIR=1
+            shift
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            echo "ERROR: Unknown argument: $1"
+            usage
+            ;;
+    esac
+done
+
+# ---------------------------------------------------------------------------
+# Interactive Configuration Prompts
+# ---------------------------------------------------------------------------
+echo "==> Please confirm or overwrite configuration:"
+
+read -p "    Linux user name [${USER_NAME}]: " input_user_name
+USER_NAME="${input_user_name:-$USER_NAME}"
+
+while [[ -z "$USER_NAME" ]]; do
+    read -p "    User name cannot be empty. Please enter a user name: " input_user_name
+    USER_NAME="${input_user_name:-$USER_NAME}"
+done
+
+read -p "    Chown homedir (0/1) [${CHOWN_HOMEDIR}]: " input_chown
+CHOWN_HOMEDIR="${input_chown:-$CHOWN_HOMEDIR}"
+
+default_ssh_keys="${SSH_KEYS[*]:-}"
+read -p "    SSH public keys (space-separated) [${default_ssh_keys}]: " input_ssh_keys
+if [[ -n "$input_ssh_keys" ]]; then
+    read -ra SSH_KEYS <<< "$input_ssh_keys"
+fi
+
+if [[ ${#SSH_KEYS[@]} -eq 0 ]]; then
+    echo "    (no SSH keys provided — skipping key addition to authorized_keys)"
+fi
+
+echo ""
+echo "==> Git Configuration (Optional, press Enter to skip):"
+read -p "    Git Display Name (e.g. John Doe): " GIT_DISPLAY_NAME
+read -p "    Git Email (e.g. john@example.com): " GIT_EMAIL
+read -p "    GitHub Username: " GITHUB_USERNAME
+read -s -p "    GitHub Token/Password: " GITHUB_TOKEN
+echo ""
+echo ""
+
+HOME_DIR="/home/${USER_NAME}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+
+echo "==> Setup configuration:"
+echo "    user-name    : ${USER_NAME}"
+echo "    home-dir     : ${HOME_DIR}"
+if [[ ${#SSH_KEYS[@]} -gt 0 ]]; then
+    echo "    ssh keys     : ${#SSH_KEYS[@]} key(s)"
+else
+    echo "    ssh keys     : (none — will skip key addition)"
+fi
+echo ""
+
+# ---------------------------------------------------------------------------
+# Step tracking
+# ---------------------------------------------------------------------------
+TOTAL_STEPS=$(grep -c "^# @STEP" "$0")
+CURRENT_STEP=0
+
+print_step() {
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    echo "==> [${CURRENT_STEP}/${TOTAL_STEPS}] $1 ..."
+}
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Change user's home directory to /home/{user-name}
+# ---------------------------------------------------------------------------
+print_step "Setting home directory to ${HOME_DIR}"
+mkdir -p "${HOME_DIR}"
+if id "${USER_NAME}" &>/dev/null; then
+    sudo usermod -d "${HOME_DIR}" "${USER_NAME}"
+else
+    echo "    User '${USER_NAME}' does not exist — creating ..."
+    sudo useradd -d "${HOME_DIR}" -g users -s /bin/bash "${USER_NAME}"
+fi
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Grant passwordless sudo to the user
+# ---------------------------------------------------------------------------
+print_step "Granting passwordless sudo to ${USER_NAME}"
+# sudoers.d ignores files containing '.' or ending in '~' — use underscores
+SUDOERS_FILENAME="${USER_NAME//./_}"
+SUDOERS_FILE="/etc/sudoers.d/${SUDOERS_FILENAME}"
+echo "${USER_NAME} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee "${SUDOERS_FILE}" > /dev/null
+sudo chmod 440 "${SUDOERS_FILE}"
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Set up SSH authorized_keys
+# ---------------------------------------------------------------------------
+print_step "Setting up SSH authorized_keys"
+SSH_DIR="${HOME_DIR}/.ssh"
+AUTH_KEYS="${SSH_DIR}/authorized_keys"
+
+sudo mkdir -p "${SSH_DIR}"
+
+if [[ ${#SSH_KEYS[@]} -gt 0 ]]; then
+    for KEY in "${SSH_KEYS[@]}"; do
+        # Avoid duplicate entries
+        if sudo grep -qF "$KEY" "${AUTH_KEYS}" 2>/dev/null; then
+            echo "    Key already present, skipping: ${KEY:0:40}..."
+        else
+            echo "$KEY" | sudo tee -a "${AUTH_KEYS}" > /dev/null
+            echo "    Added key: ${KEY:0:40}..."
+        fi
+    done
+else
+    echo "    No SSH keys provided — skipping key addition."
+fi
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Fix ownership and permissions
+# ---------------------------------------------------------------------------
+print_step "Fixing ownership and permissions"
+if [[ ${CHOWN_HOMEDIR} -eq 1 ]]; then
+    echo "    --chown-homedir set — scanning ${HOME_DIR} for wrong ownership ..."
+    # Only chown files that don't already have the correct ownership
+    sudo find "${HOME_DIR}" \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
+else
+    # Default: only chown the paths this script itself creates/modifies
+    sudo chown "${USER_NAME}:users" "${HOME_DIR}" "${SSH_DIR}"
+    [[ -f "${AUTH_KEYS}" ]] && sudo chown "${USER_NAME}:users" "${AUTH_KEYS}"
+fi
+sudo chmod 755 "${HOME_DIR}"
+sudo chmod 700 "${SSH_DIR}"
+[[ -f "${AUTH_KEYS}" ]] && sudo chmod 600 "${AUTH_KEYS}"
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Disable password authentication in sshd_config
+# ---------------------------------------------------------------------------
+print_step "Disabling SSH password authentication"
+SSHD_CONFIG="/etc/ssh/sshd_config"
+
+# Replace or append PasswordAuthentication
+if sudo grep -qE "^\s*#?\s*PasswordAuthentication" "${SSHD_CONFIG}"; then
+    sudo sed -i 's/^\s*#\?\s*PasswordAuthentication.*/PasswordAuthentication no/' "${SSHD_CONFIG}"
+else
+    echo "PasswordAuthentication no" | sudo tee -a "${SSHD_CONFIG}" > /dev/null
+fi
+
+# Replace or append KbdInteractiveAuthentication
+if sudo grep -qE "^\s*#?\s*KbdInteractiveAuthentication" "${SSHD_CONFIG}"; then
+    sudo sed -i 's/^\s*#\?\s*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' "${SSHD_CONFIG}"
+else
+    echo "KbdInteractiveAuthentication no" | sudo tee -a "${SSHD_CONFIG}" > /dev/null
+fi
+
+echo "    Restarting SSH service ..."
+sudo service ssh stop && sudo service ssh start
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Update and install essential packages
+# ---------------------------------------------------------------------------
+print_step "Updating apt and installing essential packages"
+sudo apt-get update -y
+sudo apt-get install -y \
+    adduser \
+    apt \
+    apt-transport-https \
+    base-files \
+    base-passwd \
+    bash \
+    bsdutils \
+    build-essential \
+    bzip2 \
+    ca-certificates \
+    code-server \
+    coreutils \
+    cuda-command-line-tools-13-0 \
+    cuda-compat-13-0 \
+    cuda-cudart-13-0 \
+    cuda-cudart-dev-13-0 \
+    cuda-keyring \
+    cuda-libraries-13-0 \
+    cuda-libraries-dev-13-0 \
+    cuda-minimal-build-13-0 \
+    cuda-nsight-compute-13-0 \
+    cuda-nvml-dev-13-0 \
+    cuda-nvtx-13-0 \
+    curl \
+    dash \
+    debconf \
+    debianutils \
+    diffutils \
+    docker-ce-cli \
+    dpkg \
+    e2fsprogs \
+    findutils \
+    fzf \
+    gawk \
+    gcc \
+    gcc-12-base \
+    gh \
+    git \
+    gmp-ecm \
+    gnupg \
+    gnupg2 \
+    gpgv \
+    grep \
+    gzip \
+    hostname \
+    htop \
+    init-system-helpers \
+    jq \
+    kiwix-tools \
+    libacl1 \
+    libapt-pkg6.0 \
+    libattr1 \
+    libaudit-common \
+    libaudit1 \
+    libblkid1 \
+    libbz2-1.0 \
+    libc-bin \
+    libc6 \
+    libcap-ng0 \
+    libcap2 \
+    libcom-err2 \
+    libcrypt1 \
+    libcublas-13-0 \
+    libcublas-dev-13-0 \
+    libcusparse-13-0 \
+    libcusparse-dev-13-0 \
+    libdb5.3 \
+    libdebconfclient0 \
+    libeigen3-dev \
+    libext2fs2 \
+    libffi-dev \
+    libffi8 \
+    libgcc-s1 \
+    libgcrypt20 \
+    libgmp-dev \
+    libgmp10 \
+    libgnutls30 \
+    libgpg-error0 \
+    libgssapi-krb5-2 \
+    libhogweed6 \
+    libidn2-0 \
+    libjpeg-dev \
+    libk5crypto3 \
+    libkeyutils1 \
+    libkrb5-3 \
+    libkrb5-dev \
+    libkrb5support0 \
+    liblz4-1 \
+    liblzma5 \
+    libmount1 \
+    libmpfr-dev \
+    libnccl-dev \
+    libnccl2 \
+    libncurses6 \
+    libncursesw6 \
+    libnettle8 \
+    libnpp-13-0 \
+    libnpp-dev-13-0 \
+    libnsl2 \
+    libp11-kit0 \
+    libpam-modules \
+    libpam-modules-bin \
+    libpam-runtime \
+    libpam0g \
+    libpcre2-8-0 \
+    libpcre3 \
+    libprocps8 \
+    libseccomp2 \
+    libselinux1 \
+    libsemanage-common \
+    libsemanage2 \
+    libsepol2 \
+    libsmartcols1 \
+    libss2 \
+    libssl-dev \
+    libssl3 \
+    libstdc++6 \
+    libsystemd0 \
+    libtasn1-6 \
+    libtinfo6 \
+    libtirpc-common \
+    libtirpc3 \
+    libudev1 \
+    libunistring2 \
+    libuuid1 \
+    libxxhash0 \
+    libzstd1 \
+    lmodern \
+    locales \
+    login \
+    logsave \
+    lsb-base \
+    lsb-release \
+    mawk \
+    mount \
+    nano \
+    ncurses-base \
+    ncurses-bin \
+    net-tools \
+    npm \
+    p7zip-full \
+    p7zip-rar \
+    pandoc \
+    passwd \
+    perl-base \
+    procps \
+    python3-dev \
+    python3-pip \
+    rsync \
+    sagemath \
+    sed \
+    sensible-utils \
+    software-properties-common \
+    sudo \
+    sysvinit-utils \
+    tar \
+    television \
+    texlive-fonts-extra \
+    texlive-fonts-recommended \
+    texlive-plain-generic \
+    texlive-xetex \
+    tzdata \
+    ubuntu-keyring \
+    unzip \
+    usrmerge \
+    util-linux \
+    vim \
+    wget \
+    xz-utils \
+    zim-tools \
+    zip \
+    zlib1g \
+    zlib1g-dev
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Install additional command-line tools
+# ---------------------------------------------------------------------------
+print_step "Installing additional command-line tools (Rust, Python, Node tools, Starship)"
+
+# 1. Rust and Cargo Tools
+echo "    Installing Rust and Cargo tools ..."
+sudo -u "${USER_NAME}" bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install cargo-binstall"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza television"
+
+# 2. Python Tools (uv, ruff, black, huggingface_hub)
+echo "    Installing Python CLI tools ..."
+sudo -u "${USER_NAME}" bash -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.local/bin/env\" 2>/dev/null || true; \"${HOME_DIR}/.local/bin/uv\" tool install ruff && \"${HOME_DIR}/.local/bin/uv\" tool install huggingface_hub && \"${HOME_DIR}/.local/bin/uv\" tool install black"
+
+# 3. nvm and Node.js
+echo "    Installing nvm and Node.js ..."
+sudo -u "${USER_NAME}" bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash"
+sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; nvm install --lts && nvm use --lts"
+
+# 4. Node CLI Tools (gemini-cli)
+echo "    Installing Node CLI tools (gemini-cli) ..."
+sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; npm install -g @google/gemini-cli"
+
+# 5. Miscellaneous System Tools (ble.sh, Starship)
+echo "    Installing ble.sh and Starship prompt ..."
+sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoya/ble.sh.git /tmp/ble.sh && make -C /tmp/ble.sh install PREFIX=~/.local && rm -rf /tmp/ble.sh"
+curl -sS https://starship.rs/install.sh | sh -s -- -y
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Configure bash environment
+# ---------------------------------------------------------------------------
+print_step "Configuring .bashrc, .bash_profile, and .profile"
+
+sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.bashrc" "${HOME_DIR}/.bashrc"
+sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.bash_profile" "${HOME_DIR}/.bash_profile"
+sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.profile" "${HOME_DIR}/.profile"
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Configure ~/.config and ~/.gemini environments
+# ---------------------------------------------------------------------------
+print_step "Copying ~/.config and ~/.gemini environments"
+
+sudo -u "${USER_NAME}" mkdir -p "${HOME_DIR}/.config"
+sudo -u "${USER_NAME}" mkdir -p "${HOME_DIR}/.gemini"
+
+sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.config/"* "${HOME_DIR}/.config/"
+sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.gemini/"* "${HOME_DIR}/.gemini/"
+
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Configure system time zone and locales
+# ---------------------------------------------------------------------------
+print_step "Setting system time zone to Asia/Seoul and generating locales"
+ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+echo "Asia/Seoul" > /etc/timezone
+
+locale-gen en_US.UTF-8
+update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+echo "    Done."
+
+# ---------------------------------------------------------------------------
+# @STEP
+# Configure git credential helper
+# ---------------------------------------------------------------------------
+print_step "Configuring git and credentials"
+sudo -u "${USER_NAME}" git config --global credential.helper store
+if [[ -n "$GIT_DISPLAY_NAME" ]]; then
+    sudo -u "${USER_NAME}" git config --global user.name "${GIT_DISPLAY_NAME}"
+fi
+if [[ -n "$GIT_EMAIL" ]]; then
+    sudo -u "${USER_NAME}" git config --global user.email "${GIT_EMAIL}"
+fi
+if [[ -n "$GITHUB_USERNAME" && -n "$GITHUB_TOKEN" ]]; then
+    sudo -u "${USER_NAME}" bash -c "echo 'https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com' > \"${HOME_DIR}/.git-credentials\""
+    sudo -u "${USER_NAME}" chmod 600 "${HOME_DIR}/.git-credentials"
+fi
+echo "    Done."
+
+echo ""
+echo "==> Setup complete!"
+echo ""
+echo "    Next steps (if not already done):"
+echo "    1. Add the following to your local ~/.ssh/config:"
+echo ""
+echo "       Host <your-preferred-host-name>"
+echo "           HostName ssh-nipagpu.kakaocloud.com"
+echo "           User ${USER_NAME}"
+echo "           IdentityFile <path-to-your-private-key>"
+echo "           Port <port-shown-at-Use-SSH-column>"
+echo ""
+echo "    2. Verify SSH key login works before closing this session."
+sing this session."
