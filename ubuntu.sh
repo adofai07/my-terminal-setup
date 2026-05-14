@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# Colors
+# ---------------------------------------------------------------------------
+readonly C_BLUE="\033[1;34m"
+readonly C_GREEN="\033[1;32m"
+readonly C_YELLOW="\033[1;33m"
+readonly C_RED="\033[1;31m"
+readonly C_RESET="\033[0m"
+
+
 # Check for root/sudo privileges
 if [[ $EUID -ne 0 ]]; then
    echo "ERROR: This script must be run as root. Please use sudo." 
@@ -153,7 +163,7 @@ else
     echo "    User '${USER_NAME}' does not exist — creating ..."
     sudo useradd -d "${HOME_DIR}" -g users -s /bin/bash "${USER_NAME}"
 fi
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -165,7 +175,7 @@ SUDOERS_FILENAME="${USER_NAME//./_}"
 SUDOERS_FILE="/etc/sudoers.d/${SUDOERS_FILENAME}"
 echo "${USER_NAME} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee "${SUDOERS_FILE}" > /dev/null
 sudo chmod 440 "${SUDOERS_FILE}"
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -190,7 +200,7 @@ if [[ ${#SSH_KEYS[@]} -gt 0 ]]; then
 else
     echo "    No SSH keys provided — skipping key addition."
 fi
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -209,7 +219,7 @@ fi
 sudo chmod 755 "${HOME_DIR}"
 sudo chmod 700 "${SSH_DIR}"
 [[ -f "${AUTH_KEYS}" ]] && sudo chmod 600 "${AUTH_KEYS}"
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -239,7 +249,7 @@ if [[ -f "${SSHD_CONFIG}" ]]; then
 else
     echo "    SSHD config not found at ${SSHD_CONFIG}, skipping."
 fi
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -277,9 +287,11 @@ sudo apt-get install -y \
     diffutils \
     dpkg \
     e2fsprogs \
+    fastfetch \
     findutils \
     fzf \
     gawk \
+    glow \
     gcc \
     gcc-12-base \
     gh \
@@ -382,6 +394,7 @@ sudo apt-get install -y \
     nano \
     ncurses-base \
     ncurses-bin \
+    neovim \
     net-tools \
     npm \
     p7zip-full \
@@ -414,7 +427,7 @@ sudo apt-get install -y \
     zip \
     zlib1g \
     zlib1g-dev
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -426,7 +439,7 @@ print_step "Installing additional command-line tools (Rust, Python, Node tools, 
 echo "    Installing Rust and Cargo tools ..."
 sudo -u "${USER_NAME}" bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install cargo-binstall"
-sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza bottom"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza bottom xh broot watchexec"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install television"
 
 # 2. Python Tools (uv, ruff, black, huggingface_hub)
@@ -447,7 +460,7 @@ sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NV
 echo "    Installing ble.sh and Starship prompt ..."
 sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh && make -C /tmp/ble.sh install PREFIX=~/.local && rm -rf /tmp/ble.sh"
 curl -sS https://starship.rs/install.sh | sh -s -- -y
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -458,7 +471,7 @@ print_step "Configuring .bashrc, .bash_profile, and .profile"
 sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.bashrc" "${HOME_DIR}/.bashrc"
 sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.bash_profile" "${HOME_DIR}/.bash_profile"
 sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.profile" "${HOME_DIR}/.profile"
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -472,7 +485,7 @@ sudo -u "${USER_NAME}" mkdir -p "${HOME_DIR}/.gemini"
 sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.config/"* "${HOME_DIR}/.config/"
 sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.gemini/"* "${HOME_DIR}/.gemini/"
 
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -484,7 +497,7 @@ echo "Asia/Seoul" > /etc/timezone
 
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
@@ -502,7 +515,7 @@ if [[ -n "$GITHUB_USERNAME" && -n "$GITHUB_TOKEN" ]]; then
     sudo -u "${USER_NAME}" bash -c "echo 'https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com' > \"${HOME_DIR}/.git-credentials\""
     sudo -u "${USER_NAME}" chmod 600 "${HOME_DIR}/.git-credentials"
 fi
-echo "    Done."
+echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 echo ""
-echo "==> Setup complete!"
+echo -e "${C_GREEN}==> Setup complete!${C_RESET}"
