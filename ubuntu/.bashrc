@@ -25,3 +25,14 @@ alias lt="eza --tree --icons=always"
 
 alias re="source ~/.bashrc"
 export BAT_THEME="gruvbox-dark"
+
+git-acp() {
+    if [ -z "$1" ]; then
+        echo "Error: Commit message required."
+        echo "Usage: git-acp \"Your commit message\""
+        return 1
+    fi
+    git add -A
+    git commit -m "$1"
+    git push origin main
+}
