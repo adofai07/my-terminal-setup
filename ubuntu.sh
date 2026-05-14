@@ -370,7 +370,6 @@ sudo apt-get install -y \
     libtirpc-common \
     libtirpc3 \
     libudev1 \
-    libunistring2 \
     libuuid1 \
     libxxhash0 \
     libzstd1 \
@@ -521,4 +520,5 @@ echo "           Port <port-shown-at-Use-SSH-column>"
 echo ""
 echo "    2. Verify SSH key login works before closing this session."
 sing this session."
+"
 "
