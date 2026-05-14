@@ -429,7 +429,8 @@ print_step "Installing additional command-line tools (Rust, Python, Node tools, 
 echo "    Installing Rust and Cargo tools ..."
 sudo -u "${USER_NAME}" bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install cargo-binstall"
-sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza television"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza bottom"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install television"
 
 # 2. Python Tools (uv, ruff, black, huggingface_hub)
 echo "    Installing Python CLI tools ..."
