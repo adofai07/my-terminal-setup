@@ -396,7 +396,6 @@ sudo apt-get install -y \
     python3-dev \
     python3-pip \
     rsync \
-    sagemath \
     sed \
     sensible-utils \
     software-properties-common \
@@ -411,7 +410,6 @@ sudo apt-get install -y \
     tzdata \
     ubuntu-keyring \
     unzip \
-    usrmerge \
     util-linux \
     vim \
     wget \
