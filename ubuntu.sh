@@ -258,7 +258,6 @@ sudo apt-get install -y \
     build-essential \
     bzip2 \
     ca-certificates \
-    code-server \
     coreutils \
     cuda-command-line-tools-13-0 \
     cuda-compat-13-0 \
@@ -276,7 +275,6 @@ sudo apt-get install -y \
     debconf \
     debianutils \
     diffutils \
-    docker-ce-cli \
     dpkg \
     e2fsprogs \
     findutils \
@@ -401,7 +399,6 @@ sudo apt-get install -y \
     sudo \
     sysvinit-utils \
     tar \
-    television \
     texlive-fonts-extra \
     texlive-fonts-recommended \
     texlive-plain-generic \
@@ -522,4 +519,6 @@ echo ""
 echo "    2. Verify SSH key login works before closing this session."
 sing this session."
 "
+"
+
 "
