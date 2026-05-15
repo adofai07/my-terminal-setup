@@ -36,3 +36,13 @@ git-acp() {
     git commit -m "$1"
     git push origin main
 }
+
+8z() {
+    if [ -z "$1" ]; then
+        echo "Error: Directory name required."
+        echo "Usage: 8z <dirname>"
+        return 1
+    fi
+    local target="${1%/}"
+    7z a "${target}.7z" "$target" -t7z -m0=lzma2 -mx=9 -mfb=273 -md=1536m -ms=on -mqs=on -mmt=8
+}
