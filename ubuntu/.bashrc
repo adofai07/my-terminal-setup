@@ -56,3 +56,7 @@ git-acp() {
     local target="${1%/}"
     7z a "${target}.7z" "$target" -t7z -m0=lzma2 -mx=1 -ms=off -mmt=4
 }
+
+uuid4() {
+    cat /proc/sys/kernel/random/uuid
+}
