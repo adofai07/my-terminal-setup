@@ -405,6 +405,7 @@ sudo apt-get install -y \
     procps \
     python3-dev \
     python3-pip \
+    rclone \
     rsync \
     sed \
     sensible-utils \
