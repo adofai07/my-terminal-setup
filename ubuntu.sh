@@ -457,7 +457,7 @@ sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo insta
 # 2. Python Tools (uv, ruff, black, huggingface_hub)
 echo "    Installing Python CLI tools ..."
 sudo -u "${USER_NAME}" bash -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
-sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.local/bin/env\" 2>/dev/null || true; \"${HOME_DIR}/.local/bin/uv\" tool install ruff && \"${HOME_DIR}/.local/bin/uv\" tool install huggingface_hub && \"${HOME_DIR}/.local/bin/uv\" tool install black"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.local/bin/env\" 2>/dev/null || true; \"${HOME_DIR}/.local/bin/uv\" tool install --force ruff && \"${HOME_DIR}/.local/bin/uv\" tool install --force huggingface_hub && \"${HOME_DIR}/.local/bin/uv\" tool install --force black"
 
 # 3. nvm and Node.js
 echo "    Installing nvm and Node.js ..."
