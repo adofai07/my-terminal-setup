@@ -449,7 +449,7 @@ print_step "Installing additional command-line tools (Rust, Python, Node tools, 
 
 # 1. Rust and Cargo Tools
 echo "    Installing Rust and Cargo tools ..."
-sudo -u "${USER_NAME}" bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+sudo -u "${USER_NAME}" bash -c "curl --retry 5 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install cargo-binstall"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza bottom xh broot watchexec"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install television"
