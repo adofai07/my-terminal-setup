@@ -4,7 +4,7 @@ My personal scripts to configure a new notebook
 
 ## Setup Steps
 
-The `ubuntu.sh` script automates the provisioning of the environment through the following steps:
+The `ubuntu-notebook.sh` script automates the provisioning of the environment through the following steps:
 
 | Step | Description |
 | :---: | :--- |
