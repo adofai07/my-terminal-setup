@@ -46,3 +46,13 @@ git-acp() {
     local target="${1%/}"
     7z a "${target}.7z" "$target" -t7z -m0=lzma2 -mx=9 -mfb=273 -md=1536m -ms=on -mqs=on -mmt=4
 }
+
+6z() {
+    if [ -z "$1" ]; then
+        echo "Error: Directory name required."
+        echo "Usage: 6z <dirname>"
+        return 1
+    fi
+    local target="${1%/}"
+    7z a "${target}.7z" "$target" -t7z -m0=lzma2 -mx=1 -ms=off -mmt=4
+}
