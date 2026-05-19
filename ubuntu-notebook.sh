@@ -267,6 +267,12 @@ sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/charm.gpg
 echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list > /dev/null
 
+# Add Docker repository
+echo "    Adding Docker repository ..."
+sudo mkdir -p /etc/apt/keyrings
+curl --retry 5 -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
 sudo apt-get update -y
 sudo apt-get install -y --allow-change-held-packages \
     adduser \
@@ -296,6 +302,10 @@ sudo apt-get install -y --allow-change-held-packages \
     debconf \
     debianutils \
     diffutils \
+    docker-buildx-plugin \
+    docker-ce \
+    docker-ce-cli \
+    docker-compose-plugin \
     dpkg \
     e2fsprogs \
     fastfetch \
