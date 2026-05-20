@@ -497,13 +497,15 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
 # @STEP
-# Configure ~/.config environments
+# Configure ~/.config and ~/.gemini environments
 # ---------------------------------------------------------------------------
-print_step "Copying ~/.config environments"
+print_step "Copying ~/.config and ~/.gemini environments"
 
 sudo -u "${USER_NAME}" mkdir -p "${HOME_DIR}/.config"
+sudo -u "${USER_NAME}" mkdir -p "${HOME_DIR}/.gemini/antigravity-cli"
 
 sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.config/"* "${HOME_DIR}/.config/"
+sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.gemini/"* "${HOME_DIR}/.gemini/"
 
 echo -e "    ${C_GREEN}Done.${C_RESET}"
 
