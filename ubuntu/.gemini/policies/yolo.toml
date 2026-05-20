@@ -1,5 +1,0 @@
-[[rule]]
-toolName = "*"
-decision = "allow"
-priority = 999
-allowRedirection = true

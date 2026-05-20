@@ -16,6 +16,6 @@ The `ubuntu-notebook.sh` script automates the provisioning of the environment th
 | 6 | Update `apt` and install essential system packages and libraries |
 | 7 | Install additional CLI tools via Cargo, uv, and npm (including Rust utilities, Neovim, Fastfetch, etc.) |
 | 8 | Configure the bash environment (`.bashrc`, `.bash_profile`, `.profile`) |
-| 9 | Copy pre-configured `~/.config` and `~/.gemini` environment directories |
+| 9 | Copy pre-configured `~/.config` environment directories |
 | 10 | Configure the system time zone (Asia/Seoul) and generate locales |
 | 11 | Configure the git credential helper and global git user settings |
