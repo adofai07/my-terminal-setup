@@ -474,9 +474,9 @@ echo "    Installing nvm and Node.js ..."
 sudo -u "${USER_NAME}" bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash"
 sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; nvm install --lts && nvm use --lts"
 
-# 4. Node CLI Tools (gemini-cli)
-echo "    Installing Node CLI tools (gemini-cli) ..."
-sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; npm install -g @google/gemini-cli"
+# 4. Antigravity CLI
+echo "    Installing Antigravity CLI ..."
+sudo -u "${USER_NAME}" bash -c "curl --retry 5 -fsSL https://antigravity.google/cli/install.sh | bash"
 
 # 5. Miscellaneous System Tools (ble.sh, Starship)
 echo "    Installing ble.sh and Starship prompt ..."
