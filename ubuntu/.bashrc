@@ -17,7 +17,7 @@ export NVM_DIR="$HOME/.nvm"
 
 export LD_LIBRARY_PATH=/opt/conda/lib:$LD_LIBRARY_PATH
 
-alias gemini='gemini --yolo'
+alias agy="agy --dangerously-skip-permissions"
 
 alias ls="eza --color=always --icons=always"
 alias ll="eza -la --icons=always"
