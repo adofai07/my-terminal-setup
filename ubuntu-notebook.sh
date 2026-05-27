@@ -278,6 +278,7 @@ sudo apt-get install -y --allow-change-held-packages \
     adduser \
     apt \
     apt-transport-https \
+    autossh \
     base-files \
     base-passwd \
     bash \
