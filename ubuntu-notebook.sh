@@ -466,7 +466,7 @@ print_step "Installing additional command-line tools (Rust, Python, Node tools, 
 # Ensure user-level directories have correct ownership before running installer commands
 for dir in "${HOME_DIR}/.cache" "${HOME_DIR}/.local"; do
     if [[ -d "$dir" ]]; then
-        chown -R "${USER_NAME}:users" "$dir"
+        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
     fi
 done
 
@@ -499,7 +499,7 @@ curl -sS https://starship.rs/install.sh | sh -s -- -y
 # Fix ownership again in case any installation created new directories under root
 for dir in "${HOME_DIR}/.cache" "${HOME_DIR}/.local" "${HOME_DIR}/.npm" "${HOME_DIR}/.nvm" "${HOME_DIR}/.cargo"; do
     if [[ -d "$dir" ]]; then
-        chown -R "${USER_NAME}:users" "$dir"
+        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
     fi
 done
 echo -e "    ${C_GREEN}Done.${C_RESET}"
