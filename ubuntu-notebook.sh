@@ -552,6 +552,13 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 # Configure git credential helper
 # ---------------------------------------------------------------------------
 print_step "Configuring git and credentials"
+# Ensure Git configuration files have correct ownership
+for file in "${HOME_DIR}/.gitconfig" "${HOME_DIR}/.git-credentials"; do
+    if [[ -f "$file" ]]; then
+        chown "${USER_NAME}:users" "$file"
+    fi
+done
+
 sudo -u "${USER_NAME}" git config --global credential.helper store
 if [[ -n "$GIT_DISPLAY_NAME" ]]; then
     sudo -u "${USER_NAME}" git config --global user.name "${GIT_DISPLAY_NAME}"
@@ -560,8 +567,9 @@ if [[ -n "$GIT_EMAIL" ]]; then
     sudo -u "${USER_NAME}" git config --global user.email "${GIT_EMAIL}"
 fi
 if [[ -n "$GITHUB_USERNAME" && -n "$GITHUB_TOKEN" ]]; then
-    sudo -u "${USER_NAME}" bash -c "echo 'https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com' > \"${HOME_DIR}/.git-credentials\""
-    sudo -u "${USER_NAME}" chmod 600 "${HOME_DIR}/.git-credentials"
+    echo "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com" > "${HOME_DIR}/.git-credentials"
+    chown "${USER_NAME}:users" "${HOME_DIR}/.git-credentials"
+    chmod 600 "${HOME_DIR}/.git-credentials"
 fi
 echo -e "    ${C_GREEN}Done.${C_RESET}"
 
