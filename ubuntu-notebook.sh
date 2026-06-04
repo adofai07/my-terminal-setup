@@ -464,11 +464,12 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 print_step "Installing additional command-line tools (Rust, Python, Node tools, Starship)"
 
 # Ensure user-level directories have correct ownership before running installer commands
-# for dir in "${HOME_DIR}/.cache" "${HOME_DIR}/.local"; do
-#     if [[ -d "$dir" ]]; then
-#         find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
-#     fi
-# done
+# We target only the specific subdirectories used by these tools to avoid scanning large/virtual filesystems
+for dir in "${HOME_DIR}/.cargo" "${HOME_DIR}/.rustup" "${HOME_DIR}/.local" "${HOME_DIR}/.nvm" "${HOME_DIR}/.gemini" "${HOME_DIR}/.cache/uv" "${HOME_DIR}/.cache/pip" "${HOME_DIR}/.cache/antigravity"; do
+    if [[ -d "$dir" ]]; then
+        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
+    fi
+done
 
 # 1. Rust and Cargo Tools
 echo "    Installing Rust and Cargo tools ..."
@@ -497,11 +498,12 @@ sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submod
 curl -sS https://starship.rs/install.sh | sh -s -- -y
 
 # Fix ownership again in case any installation created new directories under root
-# for dir in "${HOME_DIR}/.cache" "${HOME_DIR}/.local" "${HOME_DIR}/.npm" "${HOME_DIR}/.nvm" "${HOME_DIR}/.cargo"; do
-#     if [[ -d "$dir" ]]; then
-#         find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
-#     fi
-# done
+# Fix ownership again in case any installation created new directories under root
+for dir in "${HOME_DIR}/.cargo" "${HOME_DIR}/.rustup" "${HOME_DIR}/.local" "${HOME_DIR}/.nvm" "${HOME_DIR}/.gemini" "${HOME_DIR}/.cache/uv" "${HOME_DIR}/.cache/pip" "${HOME_DIR}/.cache/antigravity" "${HOME_DIR}/.npm"; do
+    if [[ -d "$dir" ]]; then
+        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
+    fi
+done
 echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
