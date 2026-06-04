@@ -465,7 +465,7 @@ print_step "Installing additional command-line tools (Rust, Python, Node tools, 
 
 # 1. Rust and Cargo Tools
 echo "    Installing Rust and Cargo tools ..."
-sudo -u "${USER_NAME}" bash -c "curl --retry 5 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+sudo -u "${USER_NAME}" bash -c "curl --retry 5 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install cargo-binstall"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza bottom xh broot watchexec-cli"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install television"
@@ -496,9 +496,10 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 # ---------------------------------------------------------------------------
 print_step "Configuring .bashrc, .bash_profile, and .profile"
 
-sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.bashrc" "${HOME_DIR}/.bashrc"
-sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.bash_profile" "${HOME_DIR}/.bash_profile"
-sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.profile" "${HOME_DIR}/.profile"
+cp -r "${SCRIPT_DIR}/ubuntu/.bashrc" "${HOME_DIR}/.bashrc"
+cp -r "${SCRIPT_DIR}/ubuntu/.bash_profile" "${HOME_DIR}/.bash_profile"
+cp -r "${SCRIPT_DIR}/ubuntu/.profile" "${HOME_DIR}/.profile"
+chown "${USER_NAME}:users" "${HOME_DIR}/.bashrc" "${HOME_DIR}/.bash_profile" "${HOME_DIR}/.profile"
 echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
@@ -507,11 +508,12 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 # ---------------------------------------------------------------------------
 print_step "Copying ~/.config and ~/.gemini environments"
 
-sudo -u "${USER_NAME}" mkdir -p "${HOME_DIR}/.config"
-sudo -u "${USER_NAME}" mkdir -p "${HOME_DIR}/.gemini/antigravity-cli"
+mkdir -p "${HOME_DIR}/.config"
+mkdir -p "${HOME_DIR}/.gemini"
 
-sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.config/"* "${HOME_DIR}/.config/"
-sudo -u "${USER_NAME}" cp -r "${SCRIPT_DIR}/ubuntu/.gemini/"* "${HOME_DIR}/.gemini/"
+cp -r "${SCRIPT_DIR}/ubuntu/.config/." "${HOME_DIR}/.config/"
+cp -r "${SCRIPT_DIR}/ubuntu/.gemini/." "${HOME_DIR}/.gemini/"
+chown -R "${USER_NAME}:users" "${HOME_DIR}/.config" "${HOME_DIR}/.gemini"
 
 echo -e "    ${C_GREEN}Done.${C_RESET}"
 
