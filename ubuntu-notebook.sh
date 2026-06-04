@@ -210,7 +210,7 @@ print_step "Fixing ownership and permissions"
 if [[ ${CHOWN_HOMEDIR} -eq 1 ]]; then
     echo "    --chown-homedir set — scanning ${HOME_DIR} for wrong ownership ..."
     # Only chown files that don't already have the correct ownership
-    sudo find "${HOME_DIR}" \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
+    sudo find "${HOME_DIR}" \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown -h "${USER_NAME}:users" {} +
 else
     # Default: only chown the paths this script itself creates/modifies
     sudo chown "${USER_NAME}:users" "${HOME_DIR}" "${SSH_DIR}"
@@ -468,7 +468,7 @@ print_step "Installing additional command-line tools (Rust, Python, Node tools, 
 for dir in "${HOME_DIR}/.cargo" "${HOME_DIR}/.rustup" "${HOME_DIR}/.local" "${HOME_DIR}/.nvm" "${HOME_DIR}/.gemini" "${HOME_DIR}/.cache/uv" "${HOME_DIR}/.cache/pip" "${HOME_DIR}/.cache/antigravity"; do
     if [[ -d "$dir" ]]; then
         echo "    Checking ownership of $dir ..."
-        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
+        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown -h "${USER_NAME}:users" {} +
     fi
 done
 
@@ -502,7 +502,7 @@ curl -sS https://starship.rs/install.sh | sh -s -- -y
 for dir in "${HOME_DIR}/.cargo" "${HOME_DIR}/.rustup" "${HOME_DIR}/.local" "${HOME_DIR}/.nvm" "${HOME_DIR}/.gemini" "${HOME_DIR}/.cache/uv" "${HOME_DIR}/.cache/pip" "${HOME_DIR}/.cache/antigravity" "${HOME_DIR}/.npm"; do
     if [[ -d "$dir" ]]; then
         echo "    Checking ownership of $dir ..."
-        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
+        find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown -h "${USER_NAME}:users" {} +
     fi
 done
 echo -e "    ${C_GREEN}Done.${C_RESET}"
