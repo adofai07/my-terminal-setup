@@ -467,6 +467,7 @@ print_step "Installing additional command-line tools (Rust, Python, Node tools, 
 # We target only the specific subdirectories used by these tools to avoid scanning large/virtual filesystems
 for dir in "${HOME_DIR}/.cargo" "${HOME_DIR}/.rustup" "${HOME_DIR}/.local" "${HOME_DIR}/.nvm" "${HOME_DIR}/.gemini" "${HOME_DIR}/.cache/uv" "${HOME_DIR}/.cache/pip" "${HOME_DIR}/.cache/antigravity"; do
     if [[ -d "$dir" ]]; then
+        echo "    Checking ownership of $dir ..."
         find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
     fi
 done
@@ -498,9 +499,9 @@ sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submod
 curl -sS https://starship.rs/install.sh | sh -s -- -y
 
 # Fix ownership again in case any installation created new directories under root
-# Fix ownership again in case any installation created new directories under root
 for dir in "${HOME_DIR}/.cargo" "${HOME_DIR}/.rustup" "${HOME_DIR}/.local" "${HOME_DIR}/.nvm" "${HOME_DIR}/.gemini" "${HOME_DIR}/.cache/uv" "${HOME_DIR}/.cache/pip" "${HOME_DIR}/.cache/antigravity" "${HOME_DIR}/.npm"; do
     if [[ -d "$dir" ]]; then
+        echo "    Checking ownership of $dir ..."
         find "$dir" -xdev \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown "${USER_NAME}:users" {} +
     fi
 done
