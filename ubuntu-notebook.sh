@@ -463,6 +463,13 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 # ---------------------------------------------------------------------------
 print_step "Installing additional command-line tools (Rust, Python, Node tools, Starship)"
 
+# Ensure user-level directories have correct ownership before running installer commands
+for dir in "${HOME_DIR}/.cache" "${HOME_DIR}/.local"; do
+    if [[ -d "$dir" ]]; then
+        chown -R "${USER_NAME}:users" "$dir"
+    fi
+done
+
 # 1. Rust and Cargo Tools
 echo "    Installing Rust and Cargo tools ..."
 sudo -u "${USER_NAME}" bash -c "curl --retry 5 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path"
@@ -472,12 +479,12 @@ sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo insta
 
 # 2. Python Tools (uv, ruff, black, huggingface_hub)
 echo "    Installing Python CLI tools ..."
-sudo -u "${USER_NAME}" bash -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
+sudo -u "${USER_NAME}" bash -c "curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.local/bin/env\" 2>/dev/null || true; \"${HOME_DIR}/.local/bin/uv\" tool install --force ruff && \"${HOME_DIR}/.local/bin/uv\" tool install --force huggingface_hub && \"${HOME_DIR}/.local/bin/uv\" tool install --force black"
 
 # 3. nvm and Node.js
 echo "    Installing nvm and Node.js ..."
-sudo -u "${USER_NAME}" bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash"
+sudo -u "${USER_NAME}" bash -c "PROFILE=/dev/null curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash"
 sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; nvm install --lts && nvm use --lts"
 
 # 4. Antigravity CLI
@@ -488,6 +495,13 @@ sudo -u "${USER_NAME}" bash -c "curl --retry 5 -fsSL https://antigravity.google/
 echo "    Installing ble.sh and Starship prompt ..."
 sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh && make -C /tmp/ble.sh install PREFIX=~/.local && rm -rf /tmp/ble.sh"
 curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# Fix ownership again in case any installation created new directories under root
+for dir in "${HOME_DIR}/.cache" "${HOME_DIR}/.local" "${HOME_DIR}/.npm" "${HOME_DIR}/.nvm" "${HOME_DIR}/.cargo"; do
+    if [[ -d "$dir" ]]; then
+        chown -R "${USER_NAME}:users" "$dir"
+    fi
+done
 echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
