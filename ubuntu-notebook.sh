@@ -257,6 +257,11 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 # ---------------------------------------------------------------------------
 print_step "Updating apt and installing essential packages"
 
+# Ensure prerequisites for adding repositories are installed
+echo "    Installing prerequisites for adding repositories ..."
+sudo apt-get update -y
+sudo apt-get install -y software-properties-common curl gnupg lsb-release
+
 # Add fastfetch PPA
 echo "    Adding Fastfetch repository ..."
 sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
