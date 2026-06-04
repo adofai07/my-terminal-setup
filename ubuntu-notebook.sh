@@ -524,6 +524,7 @@ echo -e "    ${C_GREEN}Done.${C_RESET}"
 print_step "Setting system time zone to Asia/Seoul and generating locales"
 ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 echo "Asia/Seoul" > /etc/timezone
+dpkg-reconfigure -f noninteractive tzdata
 
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
