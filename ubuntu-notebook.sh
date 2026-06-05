@@ -260,7 +260,7 @@ print_step "Updating apt and installing essential packages"
 # Ensure prerequisites for adding repositories are installed
 echo "    Installing prerequisites for adding repositories ..."
 sudo apt-get update -y
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common curl gnupg lsb-release
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y software-properties-common curl gnupg lsb-release
 
 # Add fastfetch PPA
 echo "    Adding Fastfetch repository ..."
@@ -279,7 +279,7 @@ curl --retry 5 -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --y
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt-get update -y
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-change-held-packages \
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y --allow-change-held-packages \
     adduser \
     apt \
     apt-transport-https \
