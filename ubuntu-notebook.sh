@@ -357,14 +357,18 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-
     libext2fs2 \
     libffi-dev \
     libffi8 \
+    libfontconfig1-dev \
     libgcc-s1 \
     libgcrypt20 \
     libgmp-dev \
     libgmp10 \
     libgnutls30 \
     libgpg-error0 \
+    libgraphite2-dev \
     libgssapi-krb5-2 \
+    libharfbuzz-dev \
     libhogweed6 \
+    libicu-dev \
     libidn2-0 \
     libjpeg-dev \
     libk5crypto3 \
@@ -384,11 +388,13 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-
     libnpp-13-0 \
     libnpp-dev-13-0 \
     libnsl2 \
+    libnuma1 \
     libp11-kit0 \
     libpam-modules \
     libpam-modules-bin \
     libpam-runtime \
     libpam0g \
+    libpng-dev \
     libpcre2-8-0 \
     libpcre3 \
     libseccomp2 \
@@ -430,6 +436,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-
     passwd \
     perl-base \
     procps \
+    protobuf-compiler \
     python3-dev \
     python3-pip \
     rclone \
@@ -478,6 +485,7 @@ sudo -u "${USER_NAME}" bash -c "curl --retry 5 --proto '=https' --tlsv1.2 -sSf h
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install cargo-binstall"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo binstall -y zellij bat git-delta du-dust fd-find gitui procs ripgrep sd tealdeer zoxide eza bottom xh broot watchexec-cli"
 sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install television"
+sudo -u "${USER_NAME}" bash -c "source \"${HOME_DIR}/.cargo/env\" && cargo install --git https://github.com/aantn/smag"
 
 # 2. Python Tools (uv, ruff, black, huggingface_hub)
 echo "    Installing Python CLI tools ..."
