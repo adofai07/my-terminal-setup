@@ -146,12 +146,9 @@ if [[ ${CHOWN_HOMEDIR} -eq 1 ]]; then
     sudo find "${HOME_DIR}" \( ! -user "${USER_NAME}" -o ! -group users \) -exec chown -h "${USER_NAME}:users" {} +
 else
     # Default: only chown the paths this script itself creates/modifies
-    sudo chown "${USER_NAME}:users" "${HOME_DIR}" "${SSH_DIR}"
-    [[ -f "${AUTH_KEYS}" ]] && sudo chown "${USER_NAME}:users" "${AUTH_KEYS}"
+    sudo chown "${USER_NAME}:users" "${HOME_DIR}"
 fi
 sudo chmod 755 "${HOME_DIR}"
-sudo chmod 700 "${SSH_DIR}"
-[[ -f "${AUTH_KEYS}" ]] && sudo chmod 600 "${AUTH_KEYS}"
 echo -e "    ${C_GREEN}Done.${C_RESET}"
 
 # ---------------------------------------------------------------------------
