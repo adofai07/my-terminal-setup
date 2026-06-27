@@ -60,3 +60,18 @@ git-acp() {
 uuid4() {
     cat /proc/sys/kernel/random/uuid
 }
+
+rmrf() {
+    if [ -z "$1" ]; then
+        echo "Usage: rmrf <target>"
+        return 1
+    fi
+    local target="$1"
+    if [ -d "$target" ] && [ ! -L "$target" ]; then
+        local empty_dir=$(mktemp -d)
+        rsync -a --delete "$empty_dir/" "$target/"
+        rm -rf "$target" "$empty_dir"
+    else
+        rm -rf "$target"
+    fi
+}
