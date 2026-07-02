@@ -501,7 +501,11 @@ sudo -u "${USER_NAME}" bash -c "export NVM_DIR=\"${HOME_DIR}/.nvm\"; [ -s \"\$NV
 echo "    Installing Antigravity CLI ..."
 sudo -u "${USER_NAME}" bash -c "curl --retry 5 -fsSL https://antigravity.google/cli/install.sh | bash"
 
-# 5. Miscellaneous System Tools (ble.sh, Starship)
+# 5. Claude Code
+echo "    Installing Claude Code ..."
+sudo -u "${USER_NAME}" bash -c "curl -fsSL https://claude.ai/install.sh | bash"
+
+# 6. Miscellaneous System Tools (ble.sh, Starship)
 echo "    Installing ble.sh and Starship prompt ..."
 sudo -u "${USER_NAME}" bash -c "git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git /tmp/ble.sh && make -C /tmp/ble.sh install PREFIX=~/.local && rm -rf /tmp/ble.sh"
 curl -sS https://starship.rs/install.sh | sh -s -- -y
